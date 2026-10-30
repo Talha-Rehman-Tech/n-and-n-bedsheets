@@ -5,7 +5,54 @@
 @media(max-width:760px){.topline{padding:0 4%;font-size:7px;letter-spacing:1px}.navbar{height:74px;padding:0 4%}.brand-mark{font-size:27px}.brand-copy b{font-size:8px}.brand-copy small{font-size:7px}.navlinks{gap:12px}.navlinks>a:not(.nav-cta),.welcome{display:none}.nav-cta{padding:11px 12px;font-size:10px}.hero{display:block;padding:64px 7% 68px;min-height:0}.hero h1{font-size:57px}.hero-lead{font-size:12px}.hero-art{min-height:370px;margin-top:25px;transform:scale(.9)}.hero-stats{gap:22px;margin-top:36px}.hero-stats strong{font-size:24px}.hero-stats span{font-size:7px}.hero-bottom{left:7%;right:7%;font-size:7px}.section-pad{padding:65px 7%}.intro-grid{grid-template-columns:1fr;gap:24px}.intro h2,.cta-section h2{font-size:38px}.feature-band{grid-template-columns:1fr;padding:40px 9%;gap:25px}.feature{display:grid;grid-template-columns:45px 1fr;column-gap:12px}.feature-no{grid-row:span 3}.feature-icon{margin:0 0 8px}.feature h3{margin-bottom:7px}.feature p{max-width:none;margin-bottom:0}.cta-section{padding:70px 6%}.footer{padding:25px 5%;flex-wrap:wrap}.footer-brand{width:100%}.credits{text-align:left}.copyright{margin-left:auto}.auth-layout{grid-template-columns:1fr}.auth-art{min-height:260px;padding:45px 9%}.auth-art h2{font-size:37px;margin:18px 0 10px}.auth-mini{margin-top:22px}.auth-panel{padding:50px 8% 65px}.directory-head{padding:48px 6% 30px}.directory-head h1{font-size:37px}.directory-wrap{padding:20px 5% 55px}.search-panel{gap:8px}.search-panel select{width:100%;flex-basis:100%}.search-panel .btn{flex:1}.shop-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.shop-image{height:165px}.shop-card-body{padding:13px 11px 11px}.shop-card h3{font-size:16px;min-height:40px}.shop-product{font-size:9px}.price-chip{font-size:8px;padding:6px}.results-top{font-size:8px}.detail-wrap{padding:25px 5% 60px}.detail-grid{grid-template-columns:1fr;gap:28px}.detail-gallery{min-height:390px}.detail-main-img{height:340px}.detail-info h1{font-size:39px}.admin-wrap{padding:45px 5% 65px}.admin-wrap>h1{font-size:39px}.admin-stats{gap:8px}.admin-stats>div{padding:14px 11px}.admin-stats small{font-size:7px;letter-spacing:.5px}.admin-stats strong{font-size:23px}.admin-columns{grid-template-columns:1fr}.admin-box{padding:19px}.admin-form{grid-template-columns:1fr}.admin-form label:first-child,.admin-form label:nth-child(3),.admin-form label:nth-child(6),.admin-form button{grid-column:span 1}}
 @media(max-width:420px){.brand-copy{display:none}.hero h1{font-size:49px}.hero-actions{align-items:flex-start;flex-direction:column;gap:17px}.hero-art{margin-left:-20px;margin-right:-20px;transform:scale(.82)}.hero-stats{gap:16px}.shop-grid{grid-template-columns:1fr}.shop-image{height:225px}.shop-card h3{min-height:0}.shop-product{min-height:0}.detail-fields{grid-template-columns:1fr}.pagination{font-size:9px}.pagination a{padding:9px}.copyright{width:100%;margin-left:0}}
 
-</style></head><body><div class="topline"><span>✦ &nbsp; THE TEXTILE DIRECTORY &nbsp; ✦</span><span>FAISALABAD · PUNJAB, PAKISTAN</span></div><nav class="navbar"><a class="brand" href="{{ url_for('index') }}"><span class="brand-mark">N<span>&</span>N</span><span class="brand-copy"><b>BEDSHEETS & BLANKETS</b><small>TRADITION, WOVEN BEAUTIFULLY</small></span></a><div class="navlinks">{% if current_user %}<a href="{{ url_for('directory') }}">Shop directory</a>{% if user_role=='admin' %}<a href="{{ url_for('admin') }}">Admin</a>{% endif %}<span class="welcome">Hello, {{ current_user }}</span><form action="{{ url_for('logout') }}" method="post"><button class="nav-button" type="submit">Sign out ↗</button></form>{% else %}<a href="{{ url_for('login') }}">Sign in</a><a class="nav-cta" href="{{ url_for('register') }}">Create account <span>↗</span></a>{% endif %}</div></nav><main>{% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-wrap">{% for category,message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}{% endwith %}{% block content %}{% endblock %}</main><footer class="footer"><div class="footer-brand"><span class="brand-mark">N<span>&</span>N</span><span>Find the fabric of your next favourite space.</span></div><div class="credits"><b>Developed by: M. SAMEER · M. BILAL · M. HAMZA</b><span>PROJECT OF DR NADEEM NAZIR</span></div><div class="copyright">© 2026 N&N Textile Directory</div></footer><script src="{{ url_for('static',filename='js/main.js') }}"></script>
+/* --- SECURE AUTH STYLES --- */
+.pwd-wrap{position:relative;display:flex;align-items:center}
+.pwd-wrap input{width:100%;padding-right:42px}
+.pwd-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:transparent;border:0;cursor:pointer;color:var(--muted);font-size:16px;padding:4px 6px;line-height:1}
+.pwd-toggle:hover{color:var(--wine)}
+.auth-remember{display:flex;align-items:center;gap:8px;font-size:11px;color:#6b5d56;cursor:pointer;margin:4px 0}
+.auth-remember input{width:auto;margin:0;accent-color:var(--wine)}
+.demo-box{background:#fdf9f2;border:1px dashed var(--gold);padding:12px 14px;border-radius:4px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.demo-info{font-size:10px;line-height:1.5;color:#5a473e}
+.demo-info b{color:var(--wine);display:block}
+.btn-demo{background:#6d2635;color:#fff!important;border:0;border-radius:2px;padding:7px 12px;font-size:10px;cursor:pointer;white-space:nowrap;font-weight:600}
+.btn-demo:hover{background:#8c3948}
+.security-badge{display:flex;align-items:center;gap:6px;font-size:9px;color:#356338;background:#edf5ed;padding:6px 10px;border-radius:2px;margin-top:14px}
+
+/* --- PRODUCTS SECTION STYLES --- */
+.products-hero{background:linear-gradient(135deg,#4e1a26,#742a39);color:#fff5e4;padding:60px 8% 45px;text-align:center;position:relative;overflow:hidden}
+.products-hero .section-kicker{justify-content:center;color:#e8c987}
+.products-hero h1{font:600 clamp(34px,4vw,52px)/1.15 var(--serif);margin:16px 0 12px;color:#fff}
+.products-hero h1 em{color:#e6c887;font-style:italic}
+.products-hero p{font-size:13px;max-width:600px;margin:0 auto;color:#e4cfbe;line-height:1.7}
+.category-tabs{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:10px;margin:30px 0 10px}
+.tab-btn{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);padding:9px 18px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;transition:all .2s;text-decoration:none}
+.tab-btn:hover,.tab-btn.active{background:#e6c887;color:#4c1a25;border-color:#e6c887;font-weight:700}
+.products-wrap{padding:40px 6.5% 80px;max-width:1500px;margin:auto}
+.product-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}
+.product-card{background:#fff;border:1px solid #eadecf;border-radius:3px;overflow:hidden;display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s}
+.product-card:hover{transform:translateY(-6px);box-shadow:0 16px 36px #4c1b2618}
+.product-img-wrap{position:relative;height:240px;background:#f3eae0;overflow:hidden}
+.product-img-wrap img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.product-card:hover .product-img-wrap img{transform:scale(1.05)}
+.product-tag{position:absolute;top:12px;left:12px;background:rgba(76,27,38,.85);color:#ebd8b3;font-size:8px;font-weight:700;letter-spacing:1px;padding:5px 8px;border-radius:2px;text-transform:uppercase}
+.product-body{padding:18px 16px 14px;display:flex;flex-direction:column;flex:1}
+.product-category{font-size:8px;font-weight:700;letter-spacing:1.2px;color:#9c7c59;text-transform:uppercase;margin-bottom:6px}
+.product-title{font:600 17px/1.3 var(--serif);color:#3c2627;margin:0 0 10px;min-height:44px}
+.product-title a:hover{color:var(--wine)}
+.product-shop{font-size:11px;color:#706157;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.product-shop a{color:var(--wine);font-weight:600;border-bottom:1px dotted var(--gold)}
+.product-footer{margin-top:auto;padding-top:12px;border-top:1px solid #f0e6da;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.product-price{display:flex;flex-direction:column}
+.product-price small{font-size:7px;color:#8f7f74;letter-spacing:.5px}
+.product-price strong{font-size:14px;color:var(--wine);font-weight:700}
+.btn-view-product{background:#6d2635;color:#fff!important;font-size:10px;font-weight:600;padding:8px 12px;border-radius:2px;transition:background .2s}
+.btn-view-product:hover{background:#8c3948}
+@media(max-width:1050px){.product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.product-img-wrap{height:180px}.product-title{font-size:14px;min-height:36px}}
+@media(max-width:480px){.product-grid{grid-template-columns:1fr}}
+
+</style></head><body><div class="topline"><span>✦ &nbsp; THE TEXTILE DIRECTORY &nbsp; ✦</span><span>FAISALABAD · PUNJAB, PAKISTAN</span></div><nav class="navbar"><a class="brand" href="{{ url_for('index') }}"><span class="brand-mark">N<span>&</span>N</span><span class="brand-copy"><b>BEDSHEETS & BLANKETS</b><small>TRADITION, WOVEN BEAUTIFULLY</small></span></a><div class="navlinks"><a href="{{ url_for('products') }}">Products</a>{% if current_user %}<a href="{{ url_for('directory') }}">Shop directory</a>{% if user_role=='admin' %}<a href="{{ url_for('admin') }}">Admin</a>{% endif %}<span class="welcome">Hello, {{ current_user }}</span><form action="{{ url_for('logout') }}" method="post"><button class="nav-button" type="submit">Sign out ↗</button></form>{% else %}<a href="{{ url_for('login') }}">Sign in</a><a class="nav-cta" href="{{ url_for('register') }}">Create account <span>↗</span></a>{% endif %}</div></nav><main>{% with messages=get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flash-wrap">{% for category,message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}</div>{% endif %}{% endwith %}{% block content %}{% endblock %}</main><footer class="footer"><div class="footer-brand"><span class="brand-mark">N<span>&</span>N</span><span>Find the fabric of your next favourite space.</span></div><div class="credits"><b>Developed by: M. SAMEER · M. BILAL · M. HAMZA</b><span>PROJECT OF DR NADEEM NAZIR</span></div><div class="copyright">© 2026 N&N Textile Directory</div></footer><script src="{{ url_for('static',filename='js/main.js') }}"></script>
 <script>
 document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('form.auth-form').forEach(form=>form.addEventListener('submit',e=>{const p=form.querySelector('input[name="password"]');const c=form.querySelector('input[name="confirm"]');if(p&&c&&p.value!==c.value){e.preventDefault();c.setCustomValidity('Passwords do not match');c.reportValidity()}else if(c){c.setCustomValidity('')}}));document.querySelectorAll('.flash').forEach(el=>{el.setAttribute('role','status')})});
 

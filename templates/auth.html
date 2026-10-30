@@ -1,1 +1,111 @@
-{% extends 'base.html' %}{% block title %}{{ 'Create account' if mode=='register' else 'Sign in' }} | N&N{% endblock %}{% block content %}<section class="auth-layout"><div class="auth-art"><div class="auth-pattern"></div><div class="auth-art-copy"><div class="eyebrow">N&N TEXTILE DIRECTORY</div><h2>A little more<br><em>comfort in every</em><br>connection.</h2><p>Explore a growing world of bedding and home textile businesses.</p><div class="auth-mini">✦ &nbsp; BEDSHEETS · BLANKETS · TEXTILES</div></div></div><div class="auth-panel"><div class="form-kicker">WELCOME TO N&N</div><h1>{{ 'Create your account' if mode=='register' else 'Welcome back' }}</h1><p class="form-sub">{{ 'Join the directory and discover textile businesses.' if mode=='register' else 'Sign in to continue to the shop directory.' }}</p><form method="post" class="auth-form">{% if mode=='register' %}<label>Full name<input name="name" type="text" placeholder="Your name" maxlength="100" required autocomplete="name"></label>{% endif %}<label>Email address<input name="email" type="email" placeholder="you@example.com" required autocomplete="email"></label><label>Password<input name="password" type="password" placeholder="At least 8 characters" required minlength="8" autocomplete="{{ 'new-password' if mode=='register' else 'current-password' }}"></label>{% if mode=='register' %}<label>Confirm password<input name="confirm" type="password" placeholder="Enter password again" required minlength="8" autocomplete="new-password"></label>{% endif %}<button class="btn btn-primary btn-full" type="submit">{{ 'Create account' if mode=='register' else 'Sign in securely' }} <span>↗</span></button></form><p class="switch-auth">{{ 'Already have an account?' if mode=='register' else 'New to N&N?' }} <a href="{{ url_for('login' if mode=='register' else 'register') }}">{{ 'Sign in' if mode=='register' else 'Create an account' }}</a></p><div class="secure-note">▣ &nbsp; Your password is stored securely as a hash.</div></div></section>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}{{ 'Create account' if mode=='register' else 'Secure Sign in' }} | N&N Bedsheets & Blankets{% endblock %}
+{% block content %}
+<section class="auth-layout">
+  <div class="auth-art">
+    <div class="auth-pattern"></div>
+    <div class="auth-art-copy">
+      <div class="eyebrow">N&N TEXTILE DIRECTORY</div>
+      <h2>A little more<br><em>comfort in every</em><br>connection.</h2>
+      <p>Explore verified bedding, bridal comforters, and blanket businesses across Faisalabad & Punjab.</p>
+      <div class="auth-mini">✦ &nbsp; BEDSHEETS · BLANKETS · TEXTILES</div>
+    </div>
+  </div>
+
+  <div class="auth-panel">
+    <div class="form-kicker">🔒 &nbsp; SECURE AUTHENTICATION</div>
+    <h1>{{ 'Create your account' if mode=='register' else 'Welcome back' }}</h1>
+    <p class="form-sub">{{ 'Join the directory to discover textile suppliers and wholesale catalogs.' if mode=='register' else 'Sign in securely to access the shop directory and member catalogs.' }}</p>
+
+    {% if mode != 'register' %}
+    <div class="demo-box">
+      <div class="demo-info">
+        <b>✦ Quick Demo Credentials:</b>
+        admin@nandn.local &nbsp;•&nbsp; NandN@2026
+      </div>
+      <button type="button" class="btn-demo" onclick="fillDemoCredentials()">1-Click Fill ⚡</button>
+    </div>
+    {% endif %}
+
+    <form method="post" class="auth-form" id="authForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      {% if mode=='register' %}
+      <label>
+        Full name
+        <input name="name" type="text" placeholder="Your name or business title" maxlength="100" required autocomplete="name">
+      </label>
+      {% endif %}
+
+      <label>
+        Email address
+        <input id="emailInput" name="email" type="email" placeholder="you@example.com" required autocomplete="email">
+      </label>
+
+      <label>
+        Password
+        <div class="pwd-wrap">
+          <input id="pwdInput" name="password" type="password" placeholder="At least 8 characters" required minlength="8" autocomplete="{{ 'new-password' if mode=='register' else 'current-password' }}">
+          <button type="button" class="pwd-toggle" onclick="togglePasswordVisibility('pwdInput', this)" title="Show/Hide password">👁</button>
+        </div>
+      </label>
+
+      {% if mode=='register' %}
+      <label>
+        Confirm password
+        <div class="pwd-wrap">
+          <input id="confirmInput" name="confirm" type="password" placeholder="Confirm password" required minlength="8" autocomplete="new-password">
+          <button type="button" class="pwd-toggle" onclick="togglePasswordVisibility('confirmInput', this)" title="Show/Hide password">👁</button>
+        </div>
+      </label>
+      {% else %}
+      <label class="auth-remember">
+        <input type="checkbox" name="remember" value="1" checked>
+        <span>Remember this device for 7 days</span>
+      </label>
+      {% endif %}
+
+      <button class="btn btn-primary btn-full" type="submit">
+        {{ 'Create secure account' if mode=='register' else 'Sign in securely' }} <span>↗</span>
+      </button>
+    </form>
+
+    <p class="switch-auth">
+      {{ 'Already have an account?' if mode=='register' else 'New to N&N Textile Directory?' }}
+      <a href="{{ url_for('login' if mode=='register' else 'register') }}">
+        {{ 'Sign in' if mode=='register' else 'Create a free account' }}
+      </a>
+    </p>
+
+    <div class="security-badge">
+      <span>🛡️</span>
+      <span>Protected by PBKDF2 Password Encryption, CSRF Tokens & Rate-Limit Shield.</span>
+    </div>
+  </div>
+</section>
+
+<script>
+function togglePasswordVisibility(fieldId, btn) {
+  const input = document.getElementById(fieldId);
+  if (input) {
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = '🔒';
+    } else {
+      input.type = 'password';
+      btn.textContent = '👁';
+    }
+  }
+}
+
+function fillDemoCredentials() {
+  const email = document.getElementById('emailInput');
+  const pwd = document.getElementById('pwdInput');
+  if (email && pwd) {
+    email.value = 'admin@nandn.local';
+    pwd.value = 'NandN@2026';
+    email.focus();
+  }
+}
+</script>
+{% endblock %}

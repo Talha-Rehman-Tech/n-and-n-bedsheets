@@ -1,1 +1,144 @@
-{% extends 'base.html' %}{% block title %}N&N — A world woven in comfort{% endblock %}{% block content %}<section class="hero"><div class="hero-glow"></div><div class="hero-content"><div class="eyebrow"><i></i> YOUR TEXTILE DISCOVERY, REIMAGINED</div><h1>Where comfort<br>meets <em>craft.</em></h1><p class="hero-lead">A curated directory of bedsheet and blanket businesses across Faisalabad and Punjab — made easier to explore, compare and discover.</p><div class="hero-actions"><a class="btn btn-gold" href="{{ url_for('register') }}">Explore the directory <span>↗</span></a><a class="text-link" href="{{ url_for('login') }}">Already a member? Sign in</a></div><div class="hero-stats"><div><strong>{{ total }}<sup>+</sup></strong><span>SHOP LISTINGS</span></div><div><strong>{{ areas }}<sup>+</sup></strong><span>MARKET AREAS</span></div><div><strong>01</strong><span>TEXTILE DESTINATION</span></div></div></div><div class="hero-art"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="art-card art-back"><div class="fabric-pattern"></div><span>TIMELESS TEXTURES</span></div><div class="art-card art-front"><div class="fabric-photo"><img src="{{ url_for('static',filename='images/shops/shop_001_product.jpg') }}" alt="Textile product"></div><div class="art-caption"><span>THE COLLECTION</span><b>Comfort, considered.</b><small>Crafted for everyday living</small></div></div><div class="floating-seal"><span>✦</span><b>MADE FOR<br>YOUR HOME</b><small>EST. WITH CARE</small></div><div class="sparkle s1">✧</div><div class="sparkle s2">✦</div></div><div class="hero-bottom"><span>SCROLL TO DISCOVER</span><div class="scroll-line"></div><span>01 / THE DIRECTORY</span></div></section><section class="intro section-pad"><div class="section-kicker">A BETTER WAY TO SOURCE</div><div class="intro-grid"><h2>Discover your next<br><em>textile connection.</em></h2><div><p>From wholesale hubs to specialist bedding shops, N&N brings useful business details into one elegant, searchable place. Create an account to explore the complete directory and its shop imagery.</p><a class="under-link" href="{{ url_for('register') }}">Start exploring <span>⟶</span></a></div></div></section><section class="feature-band"><div class="feature"><span class="feature-no">01</span><div class="feature-icon">⌕</div><h3>Search with ease</h3><p>Find shops by name, market, address, phone number or product type.</p></div><div class="feature"><span class="feature-no">02</span><div class="feature-icon">▧</div><h3>Visual directory</h3><p>Browse shop and product images supplied with the original spreadsheet.</p></div><div class="feature"><span class="feature-no">03</span><div class="feature-icon">✧</div><h3>Built for discovery</h3><p>Filter market areas and bedding categories to narrow your search.</p></div></section><section class="cta-section"><div class="cta-pattern"></div><div class="section-kicker">YOUR NEXT CONNECTION STARTS HERE</div><h2>Good textiles begin<br>with <em>good connections.</em></h2><a class="btn btn-light" href="{{ url_for('register') }}">Create your free account <span>↗</span></a></section>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}N&N — Bedsheets & Blankets Textile Directory{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-content">
+    <div class="eyebrow"><i></i> YOUR TEXTILE DISCOVERY, REIMAGINED</div>
+    <h1>Where comfort<br>meets <em>craft.</em></h1>
+    <p class="hero-lead">A curated directory of bedsheet, bridal comforter and blanket businesses across Faisalabad and Punjab — made easier to explore, compare and discover.</p>
+    <div class="hero-actions">
+      <a class="btn btn-gold" href="{{ url_for('products') }}">Browse Products <span>↗</span></a>
+      <a class="text-link" href="{{ url_for('directory') }}">Explore Shop Directory</a>
+    </div>
+    <div class="hero-stats">
+      <div><strong>{{ total }}<sup>+</sup></strong><span>SHOP LISTINGS</span></div>
+      <div><strong>{{ areas }}<sup>+</sup></strong><span>MARKET AREAS</span></div>
+      <div><strong>01</strong><span>TEXTILE DESTINATION</span></div>
+    </div>
+  </div>
+
+  <div class="hero-art">
+    <div class="orbit orbit-one"></div>
+    <div class="orbit orbit-two"></div>
+    <div class="art-card art-back">
+      <div class="fabric-pattern"></div>
+      <span>TIMELESS TEXTURES</span>
+    </div>
+    <div class="art-card art-front">
+      <div class="fabric-photo">
+        <img src="{{ url_for('static',filename='images/shops/shop_001_product.jpg') }}" alt="Textile product">
+      </div>
+      <div class="art-caption">
+        <span>THE COLLECTION</span>
+        <b>Comfort, considered.</b>
+        <small>Crafted for everyday living</small>
+      </div>
+    </div>
+    <div class="floating-seal">
+      <span>✦</span>
+      <b>MADE FOR<br>YOUR HOME</b>
+      <small>EST. WITH CARE</small>
+    </div>
+    <div class="sparkle s1">✧</div>
+    <div class="sparkle s2">✦</div>
+  </div>
+
+  <div class="hero-bottom">
+    <span>SCROLL TO DISCOVER</span>
+    <div class="scroll-line"></div>
+    <span>01 / THE DIRECTORY</span>
+  </div>
+</section>
+
+<!-- FEATURED PRODUCTS & COLLECTIONS SECTION -->
+<section class="products-wrap" style="padding-top: 70px; padding-bottom: 70px; border-bottom: 1px solid var(--line);">
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+    <div>
+      <div class="section-kicker">✦ &nbsp; SIGNATURE TEXTILE SHOWCASE &nbsp; ✦</div>
+      <h2 style="font: 600 clamp(28px, 3.5vw, 42px)/1.2 var(--serif); margin: 8px 0 0; color: #3e2927;">
+        Featured <em>Collections</em>
+      </h2>
+      <p style="font-size: 13px; color: #796d64; margin: 8px 0 0;">Top trending bedsheets, mink kambal, and bridal comforters from verified local suppliers.</p>
+    </div>
+    <a href="{{ url_for('products') }}" class="btn btn-primary" style="padding: 13px 20px;">
+      Explore All Products <span>↗</span>
+    </a>
+  </div>
+
+  <div class="product-grid">
+    {% for p in featured_products %}
+    <article class="product-card">
+      <div class="product-img-wrap">
+        <a href="{{ url_for('shop_detail', shop_id=p.id) }}">
+          {% if p.photo2 %}
+          <img src="{{ url_for('static', filename='images/shops/' + p.photo2) }}" alt="{{ p.top_products or p.product_line }}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'image-placeholder\'>N<span>&</span>N</div>';">
+          {% else %}
+          <div class="image-placeholder">N<span>&</span>N</div>
+          {% endif %}
+        </a>
+        <span class="product-tag">Verified</span>
+      </div>
+      <div class="product-body">
+        <div class="product-category">{{ p.product_line or 'Bedding' }}</div>
+        <h3 class="product-title">
+          <a href="{{ url_for('shop_detail', shop_id=p.id) }}">
+            {{ p.top_products or p.product_line }}
+          </a>
+        </h3>
+        <div class="product-shop">
+          <span>🏪</span>
+          <span>By <a href="{{ url_for('shop_detail', shop_id=p.id) }}">{{ p.name }}</a></span>
+        </div>
+        <div class="product-footer">
+          <div class="product-price">
+            <small>PRICE RANGE</small>
+            <strong>PKR {{ p.price_range or 'Contact' }}</strong>
+          </div>
+          <a class="btn-view-product" href="{{ url_for('shop_detail', shop_id=p.id) }}">View ↗</a>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="intro section-pad">
+  <div class="section-kicker">A BETTER WAY TO SOURCE</div>
+  <div class="intro-grid">
+    <h2>Discover your next<br><em>textile connection.</em></h2>
+    <div>
+      <p>From wholesale hubs to specialist bedding shops, N&N brings useful business details into one elegant, searchable place. Create an account to explore the complete directory and its shop imagery.</p>
+      <a class="under-link" href="{{ url_for('products') }}">Start exploring products <span>⟶</span></a>
+    </div>
+  </div>
+</section>
+
+<section class="feature-band">
+  <div class="feature">
+    <span class="feature-no">01</span>
+    <div class="feature-icon">⌕</div>
+    <h3>Search with ease</h3>
+    <p>Find shops by name, market, address, phone number or product type.</p>
+  </div>
+  <div class="feature">
+    <span class="feature-no">02</span>
+    <div class="feature-icon">▧</div>
+    <h3>Visual directory</h3>
+    <p>Browse shop and product images supplied with the original spreadsheet.</p>
+  </div>
+  <div class="feature">
+    <span class="feature-no">03</span>
+    <div class="feature-icon">✧</div>
+    <h3>Built for discovery</h3>
+    <p>Filter market areas and bedding categories to narrow your search.</p>
+  </div>
+</section>
+
+<section class="cta-section">
+  <div class="cta-pattern"></div>
+  <div class="section-kicker">YOUR NEXT CONNECTION STARTS HERE</div>
+  <h2>Good textiles begin<br>with <em>good connections.</em></h2>
+  <a class="btn btn-light" href="{{ url_for('register') }}">Create your free account <span>↗</span></a>
+</section>
+{% endblock %}

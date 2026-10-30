@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Textile Products & Collections | N&N Bedsheets & Blankets{% endblock %}
+{% block content %}
+<section class="products-hero">
+  <div class="section-kicker">✦ &nbsp; THE N&N SHOWCASE &nbsp; ✦</div>
+  <h1>Luxury <em>Bedsheets & Blankets</em></h1>
+  <p>Discover thousands of premium bedding collections, mink kambal, bridal comforter sets, and cotton linen sourced directly from verified manufacturers and wholesale hubs across Faisalabad.</p>
+  
+  <div class="category-tabs">
+    {% for cat in categories %}
+    <a href="{{ url_for('products', category=cat if cat != 'All' else '', q=q) }}" class="tab-btn {% if selected_category == cat %}active{% endif %}">
+      {{ cat }}
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="products-wrap">
+  <form class="search-panel" method="get" action="{{ url_for('products') }}">
+    <input type="hidden" name="category" value="{{ selected_category if selected_category != 'All' else '' }}">
+    <div class="search-field">
+      <span>⌕</span>
+      <input type="search" name="q" value="{{ q }}" placeholder="Search products, fabrics, bridal sets, kambal...">
+    </div>
+    <button class="btn btn-primary" type="submit">Search ↗</button>
+    {% if q or selected_category != 'All' %}
+    <a class="clear-link" href="{{ url_for('products') }}">Clear</a>
+    {% endif %}
+  </form>
+
+  <div class="results-top">
+    <div>
+      <span class="gold-dot"></span>
+      PRODUCTS CATALOG <span class="muted">/ PAGE {{ page }} OF {{ pages }}</span>
+    </div>
+    <span class="muted">{{ total }} TEXTILE PRODUCTS</span>
+  </div>
+
+  {% if products %}
+  <div class="product-grid">
+    {% for p in products %}
+    <article class="product-card">
+      <div class="product-img-wrap">
+        <a href="{{ url_for('shop_detail', shop_id=p.id) }}">
+          {% if p.photo2 %}
+          <img src="{{ url_for('static', filename='images/shops/' + p.photo2) }}" alt="{{ p.top_products or p.product_line }}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'image-placeholder\'>N<span>&</span>N</div>';">
+          {% else %}
+          <div class="image-placeholder">N<span>&</span>N</div>
+          {% endif %}
+        </a>
+        <span class="product-tag">Verified Textile</span>
+      </div>
+
+      <div class="product-body">
+        <div class="product-category">{{ p.product_line or 'Bedding & Textiles' }}</div>
+        <h3 class="product-title">
+          <a href="{{ url_for('shop_detail', shop_id=p.id) }}">
+            {{ p.top_products or p.product_line }}
+          </a>
+        </h3>
+        
+        <div class="product-shop">
+          <span>🏪</span>
+          <span>By <a href="{{ url_for('shop_detail', shop_id=p.id) }}">{{ p.name }}</a> ({{ p.market_area or 'Faisalabad' }})</span>
+        </div>
+
+        <div class="product-footer">
+          <div class="product-price">
+            <small>EST. PRICE RANGE</small>
+            <strong>PKR {{ p.price_range or 'Contact' }}</strong>
+          </div>
+          <a class="btn-view-product" href="{{ url_for('shop_detail', shop_id=p.id) }}">View Shop ↗</a>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+
+  <div class="pagination">
+    {% if page > 1 %}
+    <a href="{{ url_for('products', page=page-1, category=selected_category if selected_category != 'All' else '', q=q) }}">← Previous</a>
+    {% else %}
+    <span></span>
+    {% endif %}
+    <span>Page <b>{{ page }}</b> of {{ pages }}</span>
+    {% if page < pages %}
+    <a href="{{ url_for('products', page=page+1, category=selected_category if selected_category != 'All' else '', q=q) }}">Next →</a>
+    {% else %}
+    <span></span>
+    {% endif %}
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div>⌕</div>
+    <h2>No products found</h2>
+    <p>Try searching with another keyword or pick a different category.</p>
+    <a class="btn btn-primary" href="{{ url_for('products') }}">View all collections</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

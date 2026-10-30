@@ -2,6 +2,8 @@ import json
 import os
 import sqlite3
 import secrets
+import time
+from datetime import timedelta
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -28,9 +30,46 @@ except Exception:
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STATIC_DIR = os.path.join(BASE_DIR, 'public', 'static') if os.path.exists(os.path.join(BASE_DIR, 'public', 'static')) else os.path.join(BASE_DIR, 'static')
 
-# Initialize Flask app with static endpoint enabled
+# Initialize Flask app
 app = Flask(__name__, static_folder=STATIC_DIR, static_url_path='/static')
 app.config['SECRET_KEY'] = os.environ.get('NANDN_SECRET_KEY') or 'nandn-secret-key-prod-2026'
+
+# --- SECURITY ENHANCEMENTS ---
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+if os.environ.get('VERCEL') or os.environ.get('HTTPS') == 'on':
+    app.config['SESSION_COOKIE_SECURE'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+
+# Brute-force rate limiting store
+FAILED_ATTEMPTS = {}
+
+def check_rate_limit(key, max_attempts=5, window_seconds=180):
+    now = time.time()
+    attempts = [t for t in FAILED_ATTEMPTS.get(key, []) if now - t < window_seconds]
+    FAILED_ATTEMPTS[key] = attempts
+    return len(attempts) < max_attempts
+
+def record_failed_attempt(key):
+    now = time.time()
+    if key not in FAILED_ATTEMPTS:
+        FAILED_ATTEMPTS[key] = []
+    FAILED_ATTEMPTS[key].append(now)
+
+def clear_failed_attempts(key):
+    FAILED_ATTEMPTS.pop(key, None)
+
+# CSRF Token Generator
+def get_csrf_token():
+    if '_csrf_token' not in session:
+        session['_csrf_token'] = secrets.token_hex(24)
+    return session['_csrf_token']
+
+app.jinja_env.globals['csrf_token'] = get_csrf_token
+
+def verify_csrf():
+    token = request.form.get('csrf_token')
+    return bool(token and token == session.get('_csrf_token'))
 
 # WSGI Middleware to extract original route from Vercel headers
 class VercelMiddleware:
@@ -122,7 +161,7 @@ def login_required(fn):
     @wraps(fn)
     def wrapped(*a, **kw):
         if not session.get('user_id'):
-            flash('Please sign in to access the shop directory.', 'info')
+            flash('Please sign in to access the shop directory and member catalogs.', 'info')
             return redirect(url_for('login', next=request.path))
         return fn(*a, **kw)
     return wrapped
@@ -141,6 +180,8 @@ def admin_required(fn):
 def globals_for_templates():
     return {'current_user': session.get('user_name'), 'user_role': session.get('role')}
 
+# --- ROUTES ---
+
 @app.route('/')
 @app.route('/api')
 @app.route('/api/index')
@@ -151,18 +192,73 @@ def index():
         with connect() as db:
             total = db.execute('SELECT COUNT(*) FROM shops').fetchone()[0]
             areas = db.execute('SELECT COUNT(DISTINCT market_area) FROM shops').fetchone()[0]
+            featured = db.execute("SELECT id, name, market_area, product_line, top_products, price_range, photo2 FROM shops WHERE photo2 IS NOT NULL AND photo2 != '' LIMIT 4").fetchall()
     except Exception:
         total = 500
         areas = 20
-    return render_template('index.html', total=total, areas=areas)
+        featured = []
+    return render_template('index.html', total=total, areas=areas, featured_products=featured)
+
+@app.route('/products')
+def products():
+    q = request.args.get('q', '').strip()
+    category = request.args.get('category', '').strip()
+    page = max(1, request.args.get('page', 1, type=int))
+    per = 12
+
+    where = ["photo2 IS NOT NULL AND photo2 != ''"]
+    params = []
+    
+    if q:
+        like = '%' + q + '%'
+        where.append('(top_products LIKE ? OR product_line LIKE ? OR name LIKE ? OR market_area LIKE ?)')
+        params += [like] * 4
+        
+    if category and category != 'All':
+        if category == 'Bedsheets':
+            where.append('(product_line LIKE "%Bedsheet%" OR top_products LIKE "%Bedsheet%")')
+        elif category == 'Blankets':
+            where.append('(product_line LIKE "%Blanket%" OR product_line LIKE "%Kambal%" OR top_products LIKE "%Blanket%" OR top_products LIKE "%Kambal%")')
+        elif category == 'Comforters':
+            where.append('(product_line LIKE "%Comforter%" OR top_products LIKE "%Comforter%" OR top_products LIKE "%Bridal%")')
+        elif category == 'Quilts':
+            where.append('(product_line LIKE "%Razai%" OR top_products LIKE "%Razai%" OR top_products LIKE "%Quilt%")')
+        elif category == 'Cushions':
+            where.append('(product_line LIKE "%Cushion%" OR top_products LIKE "%Cushion%" OR top_products LIKE "%Pillow%")')
+        else:
+            where.append('(product_line LIKE ? OR top_products LIKE ?)')
+            params += ['%' + category + '%'] * 2
+
+    clause = ' WHERE ' + ' AND '.join(where)
+    with connect() as db:
+        total = db.execute('SELECT COUNT(*) FROM shops' + clause, params).fetchone()[0]
+        products_list = db.execute('SELECT id, name, market_area, phone, product_line, top_products, price_range, average_price, business_type, photo2 FROM shops' + clause + ' ORDER BY id LIMIT ? OFFSET ?', params + [per, (page - 1) * per]).fetchall()
+        
+    categories_list = ['All', 'Bedsheets', 'Blankets', 'Comforters', 'Quilts', 'Cushions']
+    
+    return render_template(
+        'products.html',
+        products=products_list,
+        total=total,
+        page=page,
+        pages=max(1, (total + per - 1) // per),
+        q=q,
+        selected_category=category or 'All',
+        categories=categories_list
+    )
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        if not verify_csrf():
+            flash('Security validation failed. Please refresh and try again.', 'error')
+            return redirect(url_for('register'))
+            
         name = request.form.get('name', '').strip()
         email = request.form.get('email', '').strip().lower()
         pw = request.form.get('password', '')
         confirm = request.form.get('confirm', '')
+
         if not name or len(name) > 100 or not email or len(email) > 180 or '@' not in email:
             flash('Please enter a valid name and email address.', 'error')
         elif len(pw) < 8:
@@ -173,7 +269,7 @@ def register():
             try:
                 with connect() as db:
                     db.execute('INSERT INTO users(name,email,password_hash) VALUES(?,?,?)', (name, email, generate_password_hash(pw)))
-                flash('Account created. You can sign in now.', 'success')
+                flash('Account created successfully! You can now sign in.', 'success')
                 return redirect(url_for('login'))
             except sqlite3.IntegrityError:
                 flash('An account with that email already exists.', 'error')
@@ -184,26 +280,46 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        if not verify_csrf():
+            flash('Security session expired. Please refresh and try again.', 'error')
+            return redirect(url_for('login'))
+
         email = request.form.get('email', '').strip().lower()
         pw = request.form.get('password', '')
+        remember = bool(request.form.get('remember'))
+
+        # Brute-force protection
+        ip = request.headers.get('x-forwarded-for', request.remote_addr or 'unknown')
+        rate_key = f"{ip}:{email}"
+        if not check_rate_limit(rate_key):
+            flash('Too many failed attempts. For your security, please wait 3 minutes before trying again.', 'error')
+            return render_template('auth.html', mode='login')
+
         try:
             with connect() as db:
                 user = db.execute('SELECT * FROM users WHERE email=?', (email,)).fetchone()
             if user and check_password_hash(user['password_hash'], pw):
+                clear_failed_attempts(rate_key)
                 session.clear()
                 session['user_id'] = user['id']
                 session['user_name'] = user['name']
                 session['role'] = user['role']
-                return redirect(url_for('directory'))
-        except Exception:
-            pass
-        flash('Email or password is incorrect.', 'error')
+                if remember:
+                    session.permanent = True
+                flash(f'Signed in securely. Welcome back, {user["name"]}!', 'success')
+                next_url = request.args.get('next') or url_for('directory')
+                return redirect(next_url)
+        except Exception as e:
+            print("Login error:", e)
+
+        record_failed_attempt(rate_key)
+        flash('Invalid email or password. Please verify your credentials.', 'error')
     return render_template('auth.html', mode='login')
 
 @app.route('/logout', methods=['POST'])
 def logout():
     session.clear()
-    flash('You have signed out.', 'info')
+    flash('You have signed out safely.', 'info')
     return redirect(url_for('index'))
 
 @app.route('/directory')
@@ -258,6 +374,9 @@ def admin():
 @app.route('/admin/shop', methods=['POST'])
 @admin_required
 def add_shop():
+    if not verify_csrf():
+        flash('Security validation failed.', 'error')
+        return redirect(url_for('admin'))
     d = {k: request.form.get(k, '').strip() for k in ['name', 'market_area', 'address', 'phone', 'product_line', 'top_products', 'price_range', 'average_price', 'business_type', 'verification']}
     if not d['name']:
         flash('Shop name is required.', 'error')
@@ -277,6 +396,9 @@ def edit_shop(shop_id):
     if not shop:
         abort(404)
     if request.method == 'POST':
+        if not verify_csrf():
+            flash('Security validation failed.', 'error')
+            return redirect(url_for('edit_shop', shop_id=shop_id))
         d = {k: request.form.get(k, '').strip() for k in keys}
         if not d['name']:
             flash('Shop name is required.', 'error')
@@ -290,6 +412,9 @@ def edit_shop(shop_id):
 @app.route('/admin/shop/<int:shop_id>/delete', methods=['POST'])
 @admin_required
 def delete_shop(shop_id):
+    if not verify_csrf():
+        flash('Security validation failed.', 'error')
+        return redirect(url_for('admin'))
     with connect() as db:
         db.execute('DELETE FROM shops WHERE id=?', (shop_id,))
     flash('Shop record deleted.', 'info')
