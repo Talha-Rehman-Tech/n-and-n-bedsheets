@@ -32,6 +32,27 @@ STATIC_DIR = os.path.join(BASE_DIR, 'public', 'static') if os.path.exists(os.pat
 app = Flask(__name__, static_folder=STATIC_DIR, static_url_path='/static')
 app.config['SECRET_KEY'] = os.environ.get('NANDN_SECRET_KEY') or 'nandn-secret-key-prod-2026'
 
+# WSGI Middleware to normalize PATH_INFO from Vercel rewrites
+class VercelMiddleware:
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        matched_path = environ.get('HTTP_X_MATCHED_PATH')
+        if matched_path and not matched_path.startswith('/api/index'):
+            environ['PATH_INFO'] = matched_path
+        else:
+            path_info = environ.get('PATH_INFO', '')
+            if path_info.startswith('/api/index'):
+                path_info = path_info[len('/api/index'):] or '/'
+            elif path_info.startswith('/api'):
+                path_info = path_info[len('/api'):] or '/'
+            environ['PATH_INFO'] = path_info
+        environ['SCRIPT_NAME'] = ''
+        return self.wsgi_app(environ, start_response)
+
+app.wsgi_app = VercelMiddleware(app.wsgi_app)
+
 # Set resilient DictLoader with all embedded templates (containing inline styling & scripts)
 if TEMPLATES:
     app.jinja_loader = DictLoader(TEMPLATES)
@@ -95,6 +116,8 @@ def globals_for_templates():
     return {'current_user': session.get('user_name'), 'user_role': session.get('role')}
 
 @app.route('/')
+@app.route('/api')
+@app.route('/api/index')
 def index():
     if session.get('user_id'):
         return redirect(url_for('directory'))
