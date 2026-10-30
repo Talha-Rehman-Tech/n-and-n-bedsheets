@@ -6,30 +6,49 @@ BASE_DIR=os.path.abspath(os.path.dirname(__file__))
 DB_PATH=os.path.join(BASE_DIR,'nandn.db')
 DATA_PATH=os.path.join(BASE_DIR,'shops.json')
 
-if os.environ.get('VERCEL'):
+if os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
     TMP_DB='/tmp/nandn.db'
-    if not os.path.exists(TMP_DB) and os.path.exists(DB_PATH):
-        try:
-            import shutil
-            shutil.copyfile(DB_PATH, TMP_DB)
-        except Exception:
-            pass
-    DB_PATH=TMP_DB
+    if not os.path.exists(TMP_DB) or os.path.getsize(TMP_DB) == 0:
+        if os.path.exists(DB_PATH) and os.path.getsize(DB_PATH) > 0:
+            try:
+                import shutil
+                shutil.copyfile(DB_PATH, TMP_DB)
+            except Exception as e:
+                print("Failed to copy DB to /tmp:", e)
+    if os.path.exists(TMP_DB) and os.path.getsize(TMP_DB) > 0:
+        DB_PATH=TMP_DB
 
 STATIC_DIR=os.path.join(BASE_DIR,'public','static') if os.path.exists(os.path.join(BASE_DIR,'public','static')) else os.path.join(BASE_DIR,'static')
 app=Flask(__name__, template_folder=os.path.join(BASE_DIR,'templates'), static_folder=STATIC_DIR, static_url_path='/static')
 app.config['SECRET_KEY']=os.environ.get('NANDN_SECRET_KEY') or secrets.token_hex(32)
+
 def connect():
-    db=sqlite3.connect(DB_PATH); db.row_factory=sqlite3.Row; db.execute('PRAGMA foreign_keys=ON'); return db
+    try:
+        db=sqlite3.connect(DB_PATH)
+        db.row_factory=sqlite3.Row
+        db.execute('PRAGMA foreign_keys=ON')
+        return db
+    except sqlite3.OperationalError:
+        db=sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+        db.row_factory=sqlite3.Row
+        return db
+
 def init_db():
-    with connect() as db:
-        db.executescript('''CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,email TEXT NOT NULL UNIQUE,password_hash TEXT NOT NULL,role TEXT NOT NULL DEFAULT 'user',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
-        CREATE TABLE IF NOT EXISTS shops(id INTEGER PRIMARY KEY,name TEXT NOT NULL,market_area TEXT,address TEXT,phone TEXT,product_line TEXT,top_products TEXT,price_range TEXT,average_price TEXT,business_type TEXT,verification TEXT,product_image_name TEXT,photo1 TEXT,photo2 TEXT);''')
-        if db.execute('SELECT COUNT(*) FROM shops').fetchone()[0]==0:
-            with open(DATA_PATH,encoding='utf-8') as f: data=json.load(f)
-            db.executemany('INSERT INTO shops VALUES (:id,:name,:market_area,:address,:phone,:product_line,:top_products,:price_range,:average_price,:business_type,:verification,:product_image_name,:photo1,:photo2)',data)
-        if not db.execute('SELECT id FROM users WHERE email=?',('admin@nandn.local',)).fetchone():
-            db.execute('INSERT INTO users(name,email,password_hash,role) VALUES(?,?,?,?)',('N&N Administrator','admin@nandn.local',generate_password_hash('NandN@2026'),'admin'))
+    try:
+        with connect() as db:
+            db.executescript('''CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,email TEXT NOT NULL UNIQUE,password_hash TEXT NOT NULL,role TEXT NOT NULL DEFAULT 'user',created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+            CREATE TABLE IF NOT EXISTS shops(id INTEGER PRIMARY KEY,name TEXT NOT NULL,market_area TEXT,address TEXT,phone TEXT,product_line TEXT,top_products TEXT,price_range TEXT,average_price TEXT,business_type TEXT,verification TEXT,product_image_name TEXT,photo1 TEXT,photo2 TEXT);''')
+            
+            count = db.execute('SELECT COUNT(*) FROM shops').fetchone()[0]
+            if count == 0 and os.path.exists(DATA_PATH):
+                with open(DATA_PATH,encoding='utf-8') as f: data=json.load(f)
+                db.executemany('INSERT INTO shops VALUES (:id,:name,:market_area,:address,:phone,:product_line,:top_products,:price_range,:average_price,:business_type,:verification,:product_image_name,:photo1,:photo2)',data)
+            
+            if not db.execute('SELECT id FROM users WHERE email=?',('admin@nandn.local',)).fetchone():
+                db.execute('INSERT INTO users(name,email,password_hash,role) VALUES(?,?,?,?)',('N&N Administrator','admin@nandn.local',generate_password_hash('NandN@2026'),'admin'))
+    except Exception as e:
+        print("init_db notice:", e)
+
 init_db()
 def login_required(fn):
     @wraps(fn)
