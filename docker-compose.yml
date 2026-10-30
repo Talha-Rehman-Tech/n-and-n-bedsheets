@@ -10,3 +10,4 @@ services:
     environment:
       - PORT=5000
       - NANDN_SECRET_KEY=production_secret_key_change_me
+
