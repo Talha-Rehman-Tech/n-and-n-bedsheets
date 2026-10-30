@@ -18,16 +18,23 @@
     <p class="form-sub">{{ 'Join the directory to discover textile suppliers and wholesale catalogs.' if mode=='register' else 'Sign in securely to access the shop directory and member catalogs.' }}</p>
 
     {% if mode != 'register' %}
-    <div class="demo-box">
-      <div class="demo-info">
-        <b>✦ Quick Demo Credentials:</b>
-        admin@nandn.local &nbsp;•&nbsp; NandN@2026
+    <div class="demo-box" style="margin-bottom: 22px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <span style="font-size: 11px; font-weight: 700; color: #6b2d38;">✦ VERIFIED DEMO CREDENTIALS:</span>
+        <span style="font-size: 9px; background: #e8d7c4; color: #523b2c; padding: 2px 6px; border-radius: 4px; font-weight: 600;">INSTANT 1-CLICK</span>
       </div>
-      <button type="button" class="btn-demo" onclick="fillDemoCredentials()">1-Click Fill ⚡</button>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button type="button" class="btn-demo" onclick="fillAdmin()" style="flex: 1; padding: 10px 14px; font-size: 11px; cursor: pointer;">
+          🔑 Admin (NandN@2026)
+        </button>
+        <button type="button" class="btn-demo" onclick="fillDemo()" style="flex: 1; padding: 10px 14px; font-size: 11px; background: #eedfcb; color: #3e2927; cursor: pointer;">
+          👤 Member (Demo@2026)
+        </button>
+      </div>
     </div>
     {% endif %}
 
-    <form method="post" class="auth-form" id="authForm">
+    <form method="post" action="{{ url_for('login') if mode != 'register' else url_for('register') }}" class="auth-form" id="authForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
       {% if mode=='register' %}
@@ -79,7 +86,7 @@
 
     <div class="security-badge">
       <span>🛡️</span>
-      <span>Protected by PBKDF2 Password Encryption, CSRF Tokens & Rate-Limit Shield.</span>
+      <span>Protected by PBKDF2 Password Encryption, HMAC CSRF Tokens & Rate-Limit Shield.</span>
     </div>
   </div>
 </section>
@@ -98,13 +105,23 @@ function togglePasswordVisibility(fieldId, btn) {
   }
 }
 
-function fillDemoCredentials() {
+function fillAdmin() {
   const email = document.getElementById('emailInput');
   const pwd = document.getElementById('pwdInput');
   if (email && pwd) {
     email.value = 'admin@nandn.local';
     pwd.value = 'NandN@2026';
-    email.focus();
+    pwd.focus();
+  }
+}
+
+function fillDemo() {
+  const email = document.getElementById('emailInput');
+  const pwd = document.getElementById('pwdInput');
+  if (email && pwd) {
+    email.value = 'demo@nandn.local';
+    pwd.value = 'Demo@2026';
+    pwd.focus();
   }
 }
 </script>
