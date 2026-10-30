@@ -2,6 +2,18 @@ import json, os, sqlite3, secrets
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 from werkzeug.security import generate_password_hash, check_password_hash
+from jinja2 import ChoiceLoader, FileSystemLoader, DictLoader
+
+try:
+    from data_bundle import SHOPS_DATA
+except ImportError:
+    SHOPS_DATA = []
+
+try:
+    from templates_bundle import TEMPLATES
+except ImportError:
+    TEMPLATES = {}
+
 BASE_DIR=os.path.abspath(os.path.dirname(__file__))
 DB_PATH=os.path.join(BASE_DIR,'nandn.db')
 DATA_PATH=os.path.join(BASE_DIR,'shops.json')
@@ -22,6 +34,12 @@ STATIC_DIR=os.path.join(BASE_DIR,'public','static') if os.path.exists(os.path.jo
 app=Flask(__name__, template_folder=os.path.join(BASE_DIR,'templates'), static_folder=STATIC_DIR, static_url_path='/static')
 app.config['SECRET_KEY']=os.environ.get('NANDN_SECRET_KEY') or secrets.token_hex(32)
 
+# Resilient template loader: checks disk first, seamlessly falls back to embedded dictionary
+app.jinja_loader = ChoiceLoader([
+    FileSystemLoader(os.path.join(BASE_DIR, 'templates')),
+    DictLoader(TEMPLATES)
+])
+
 def connect():
     try:
         db=sqlite3.connect(DB_PATH)
@@ -40,9 +58,12 @@ def init_db():
             CREATE TABLE IF NOT EXISTS shops(id INTEGER PRIMARY KEY,name TEXT NOT NULL,market_area TEXT,address TEXT,phone TEXT,product_line TEXT,top_products TEXT,price_range TEXT,average_price TEXT,business_type TEXT,verification TEXT,product_image_name TEXT,photo1 TEXT,photo2 TEXT);''')
             
             count = db.execute('SELECT COUNT(*) FROM shops').fetchone()[0]
-            if count == 0 and os.path.exists(DATA_PATH):
-                with open(DATA_PATH,encoding='utf-8') as f: data=json.load(f)
-                db.executemany('INSERT INTO shops VALUES (:id,:name,:market_area,:address,:phone,:product_line,:top_products,:price_range,:average_price,:business_type,:verification,:product_image_name,:photo1,:photo2)',data)
+            if count == 0:
+                if SHOPS_DATA:
+                    db.executemany('INSERT INTO shops VALUES (:id,:name,:market_area,:address,:phone,:product_line,:top_products,:price_range,:average_price,:business_type,:verification,:product_image_name,:photo1,:photo2)', SHOPS_DATA)
+                elif os.path.exists(DATA_PATH):
+                    with open(DATA_PATH,encoding='utf-8') as f: data=json.load(f)
+                    db.executemany('INSERT INTO shops VALUES (:id,:name,:market_area,:address,:phone,:product_line,:top_products,:price_range,:average_price,:business_type,:verification,:product_image_name,:photo1,:photo2)',data)
             
             if not db.execute('SELECT id FROM users WHERE email=?',('admin@nandn.local',)).fetchone():
                 db.execute('INSERT INTO users(name,email,password_hash,role) VALUES(?,?,?,?)',('N&N Administrator','admin@nandn.local',generate_password_hash('NandN@2026'),'admin'))
