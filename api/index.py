@@ -32,26 +32,52 @@ STATIC_DIR = os.path.join(BASE_DIR, 'public', 'static') if os.path.exists(os.pat
 app = Flask(__name__, static_folder=STATIC_DIR, static_url_path='/static')
 app.config['SECRET_KEY'] = os.environ.get('NANDN_SECRET_KEY') or 'nandn-secret-key-prod-2026'
 
-# WSGI Middleware to normalize PATH_INFO from Vercel rewrites
+# WSGI Middleware to extract original route from Vercel headers
 class VercelMiddleware:
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        matched_path = environ.get('HTTP_X_MATCHED_PATH')
-        if matched_path and not matched_path.startswith('/api/index'):
-            environ['PATH_INFO'] = matched_path
+        candidates = [
+            environ.get('HTTP_X_VERCEL_FORWARDED_PATH'),
+            environ.get('HTTP_X_FORWARDED_URI'),
+            environ.get('HTTP_X_ORIGINAL_URI'),
+            environ.get('REQUEST_URI'),
+            environ.get('RAW_URI'),
+            environ.get('HTTP_X_MATCHED_PATH'),
+        ]
+        real_path = None
+        for c in candidates:
+            if c:
+                clean = c.split('?')[0].strip()
+                if clean and not clean.startswith('/api/index') and clean != '/api':
+                    real_path = clean
+                    break
+        if real_path:
+            environ['PATH_INFO'] = real_path
         else:
             path_info = environ.get('PATH_INFO', '')
             if path_info.startswith('/api/index'):
-                path_info = path_info[len('/api/index'):] or '/'
+                sub = path_info[len('/api/index'):]
+                environ['PATH_INFO'] = sub if sub else '/'
             elif path_info.startswith('/api'):
-                path_info = path_info[len('/api'):] or '/'
-            environ['PATH_INFO'] = path_info
+                sub = path_info[len('/api'):]
+                environ['PATH_INFO'] = sub if sub else '/'
         environ['SCRIPT_NAME'] = ''
         return self.wsgi_app(environ, start_response)
 
 app.wsgi_app = VercelMiddleware(app.wsgi_app)
+
+@app.route('/static/<path:filename>')
+def serve_static_fallback(filename):
+    for folder in [
+        os.path.join(BASE_DIR, 'public', 'static'),
+        os.path.join(BASE_DIR, 'static'),
+    ]:
+        if os.path.exists(os.path.join(folder, filename)):
+            from flask import send_from_directory
+            return send_from_directory(folder, filename)
+    abort(404)
 
 # Set resilient DictLoader with all embedded templates (containing inline styling & scripts)
 if TEMPLATES:
