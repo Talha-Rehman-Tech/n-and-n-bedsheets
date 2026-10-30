@@ -2,8 +2,22 @@ import json, os, sqlite3, secrets
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 from werkzeug.security import generate_password_hash, check_password_hash
-BASE_DIR=os.path.abspath(os.path.dirname(__file__)); DB_PATH=os.path.join(BASE_DIR,'nandn.db'); DATA_PATH=os.path.join(BASE_DIR,'shops.json')
-app=Flask(__name__); app.config['SECRET_KEY']=os.environ.get('NANDN_SECRET_KEY') or secrets.token_hex(32)
+BASE_DIR=os.path.abspath(os.path.dirname(__file__))
+DB_PATH=os.path.join(BASE_DIR,'nandn.db')
+DATA_PATH=os.path.join(BASE_DIR,'shops.json')
+
+if os.environ.get('VERCEL'):
+    TMP_DB='/tmp/nandn.db'
+    if not os.path.exists(TMP_DB) and os.path.exists(DB_PATH):
+        try:
+            import shutil
+            shutil.copyfile(DB_PATH, TMP_DB)
+        except Exception:
+            pass
+    DB_PATH=TMP_DB
+
+app=Flask(__name__, template_folder=os.path.join(BASE_DIR,'templates'), static_folder=os.path.join(BASE_DIR,'static'))
+app.config['SECRET_KEY']=os.environ.get('NANDN_SECRET_KEY') or secrets.token_hex(32)
 def connect():
     db=sqlite3.connect(DB_PATH); db.row_factory=sqlite3.Row; db.execute('PRAGMA foreign_keys=ON'); return db
 def init_db():
