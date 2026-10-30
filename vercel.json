@@ -1,13 +1,4 @@
 {
-  "functions": {
-    "api/index.py": {
-      "includeFiles": [
-        "templates/**",
-        "shops.json",
-        "nandn.db"
-      ]
-    }
-  },
   "rewrites": [
     {
       "source": "/(.*)",
