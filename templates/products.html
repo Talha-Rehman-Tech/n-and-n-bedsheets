@@ -41,9 +41,10 @@
     {% for p in products %}
     <article class="product-card">
       <div class="product-img-wrap">
-        <a href="{{ url_for('shop_detail', shop_id=p.id) }}">
+        <a href="{{ url_for('shop_detail', shop_id=p.id) }}" style="display: block; width: 100%; height: 100%;">
           {% if p.photo2 %}
-          <img src="{{ url_for('static', filename='images/shops/' + p.photo2) }}" alt="{{ p.top_products or p.product_line }}" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'image-placeholder\'>N<span>&</span>N</div>';">
+          <img src="{{ url_for('static', filename='images/shops/' + p.photo2) }}" alt="{{ p.top_products or p.product_line }}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="image-placeholder" style="display: none;">N<span>&</span>N</div>
           {% else %}
           <div class="image-placeholder">N<span>&</span>N</div>
           {% endif %}

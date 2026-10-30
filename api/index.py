@@ -323,7 +323,6 @@ def logout():
     return redirect(url_for('index'))
 
 @app.route('/directory')
-@login_required
 def directory():
     q = request.args.get('q', '').strip()
     area = request.args.get('area', '').strip()
@@ -351,13 +350,21 @@ def directory():
     return render_template('directory.html', shops=shops, total=total, page=page, pages=max(1, (total + per - 1) // per), q=q, area=area, category=category, areas=areas, categories=categories)
 
 @app.route('/shop/<int:shop_id>')
-@login_required
 def shop_detail(shop_id):
     with connect() as db:
         shop = db.execute('SELECT * FROM shops WHERE id=?', (shop_id,)).fetchone()
-    if not shop:
-        abort(404)
-    return render_template('shop.html', shop=shop)
+        if not shop:
+            abort(404)
+        related = db.execute(
+            'SELECT id, name, market_area, product_line, top_products, price_range, photo2 FROM shops WHERE (product_line=? OR market_area=?) AND id!=? LIMIT 4',
+            (shop['product_line'], shop['market_area'], shop_id)
+        ).fetchall()
+        if not related:
+            related = db.execute(
+                'SELECT id, name, market_area, product_line, top_products, price_range, photo2 FROM shops WHERE id!=? LIMIT 4',
+                (shop_id,)
+            ).fetchall()
+    return render_template('shop.html', shop=shop, related=related)
 
 @app.route('/admin')
 @admin_required

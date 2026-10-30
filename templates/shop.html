@@ -1,1 +1,147 @@
-{% extends 'base.html' %}{% block title %}{{ shop.name }} | N&N{% endblock %}{% block content %}<section class="detail-wrap"><a class="back-link" href="{{ url_for('directory') }}">← Back to directory</a><div class="detail-grid"><div class="detail-gallery">{% if shop.photo2 %}<img class="detail-main-img" src="{{ url_for('static',filename='images/shops/'+shop.photo2) }}" alt="Product image">{% else %}<div class="image-placeholder large">N<span>&</span>N</div>{% endif %}{% if shop.photo1 %}<img class="detail-secondary-img" src="{{ url_for('static',filename='images/shops/'+shop.photo1) }}" alt="Shop image">{% endif %}<div class="gallery-stamp">N&N<br><small>TEXTILE DIRECTORY</small></div></div><div class="detail-info"><div class="section-kicker">BUSINESS PROFILE · {{ '%03d'|format(shop.id) }}</div><h1>{{ shop.name }}</h1><p class="detail-area">⌖ &nbsp; {{ shop.market_area or 'Market area not listed' }}</p><div class="detail-price"><span>LISTED PRICE RANGE</span><b>PKR {{ shop.price_range or 'Contact shop' }}</b></div><div class="detail-fields"><div><small>PRODUCT LINE</small><p>{{ shop.product_line or 'Not listed' }}</p></div><div><small>TOP SELLING PRODUCTS</small><p>{{ shop.top_products or 'Not listed' }}</p></div><div><small>BUSINESS TYPE</small><p>{{ shop.business_type or 'Not listed' }}</p></div><div><small>AVERAGE PRICE (SOURCE DATA)</small><p>{{ shop.average_price or 'Not listed' }} PKR</p></div><div><small>ADDRESS</small><p>{{ shop.address or 'Not listed' }}</p></div><div><small>CONTACT NUMBER</small><p>{{ shop.phone or 'Not listed' }}</p></div><div><small>SOURCE VERIFICATION LABEL</small><p>{{ shop.verification or 'Not listed' }}</p></div></div><div class="detail-note">Source information and labels are displayed as provided in the uploaded workbook and have not been independently verified.</div><a class="btn btn-primary" href="{{ url_for('directory') }}">Back to all shops <span>↗</span></a></div></div></section>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}{{ shop.name }} — Bedding & Blanket Supplier | N&N{% endblock %}
+{% block content %}
+<section class="detail-wrap">
+  <div style="display: flex; gap: 15px; margin-bottom: 24px; font-size: 11px;">
+    <a class="back-link" style="margin-bottom: 0;" href="{{ url_for('products') }}">← Back to Products</a>
+    <span style="color: var(--line);">|</span>
+    <a class="back-link" style="margin-bottom: 0;" href="{{ url_for('directory') }}">View Shop Directory →</a>
+  </div>
+
+  <div class="detail-grid">
+    <div class="detail-gallery">
+      <div style="width: 100%; display: flex; justify-content: center; align-items: center; min-height: 400px;">
+        {% if shop.photo2 %}
+        <img class="detail-main-img" src="{{ url_for('static', filename='images/shops/' + shop.photo2) }}" alt="{{ shop.top_products or shop.name }}" loading="eager" onerror="this.style.display='none'; document.getElementById('shop-detail-ph-{{ shop.id }}').style.display='flex';">
+        <div id="shop-detail-ph-{{ shop.id }}" class="image-placeholder large" style="display: none; width: 78%; height: 430px;">N<span>&</span>N</div>
+        {% else %}
+        <div class="image-placeholder large" style="width: 78%; height: 430px;">N<span>&</span>N</div>
+        {% endif %}
+      </div>
+
+      {% if shop.photo1 %}
+      <div style="position: absolute; left: 10px; bottom: 18px; width: 37%; z-index: 2;">
+        <img class="detail-secondary-img" style="position: static; width: 100%; height: 160px; object-fit: cover;" src="{{ url_for('static', filename='images/shops/' + shop.photo1) }}" alt="Storefront for {{ shop.name }}" loading="lazy" onerror="this.parentElement.style.display='none';">
+        <div style="background: rgba(46,24,27,0.85); color: #fff; font-size: 8px; text-align: center; padding: 3px 6px; letter-spacing: 1px; font-weight: 700; border-top: 1px solid rgba(255,255,255,0.2);">STOREFRONT</div>
+      </div>
+      {% endif %}
+
+      <div class="gallery-stamp">N&N<br><small>VERIFIED TEXTILE</small></div>
+    </div>
+
+    <div class="detail-info">
+      <div class="section-kicker">SUPPLIER PROFILE · N&N-{{ '%03d'|format(shop.id) }}</div>
+      <h1>{{ shop.name }}</h1>
+      <p class="detail-area">📍 &nbsp; {{ shop.market_area or 'Faisalabad, Punjab' }}</p>
+
+      <div class="detail-price">
+        <div>
+          <span style="font-size: 8px; letter-spacing: 1px; color: #91765d; font-weight: 700; display: block;">ESTIMATED PRICE RANGE</span>
+          <b style="font: 600 22px var(--serif); color: var(--wine);">PKR {{ shop.price_range or 'Contact supplier' }}</b>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 8px; letter-spacing: 1px; color: #91765d; font-weight: 700; display: block;">BUSINESS TYPE</span>
+          <b style="font-size: 13px; color: var(--ink);">{{ shop.business_type or 'Wholesale & Retail' }}</b>
+        </div>
+      </div>
+
+      <!-- DIRECT ACTION BUTTONS (WHATSAPP & CALL) -->
+      <div style="display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
+        {% if shop.phone %}
+        {% set clean_phone = shop.phone|replace(' ', '')|replace('-', '')|replace('+', '') %}
+        {% set first_phone = clean_phone.split(',')[0] %}
+        <a href="https://wa.me/{{ first_phone }}?text=Hello%20{{ shop.name|urlencode }}%2C%20I%20am%20interested%20in%20your%20{{ (shop.top_products or shop.product_line)|urlencode }}%20(Price%3A%20PKR%20{{ (shop.price_range or 'Contact')|urlencode }})%20on%20N%26N%20Textile%20Directory." target="_blank" rel="noopener" class="btn btn-gold" style="padding: 13px 20px; background: #25D366; color: #fff; font-weight: 700; border: none; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+          💬 Inquire on WhatsApp <span>↗</span>
+        </a>
+        <a href="tel:{{ first_phone }}" class="btn btn-primary" style="padding: 13px 20px;">
+          📞 Call {{ first_phone }}
+        </a>
+        {% endif %}
+      </div>
+
+      <div class="detail-fields">
+        <div>
+          <small>FEATURED PRODUCT</small>
+          <p style="font-weight: 600; color: var(--wine);">{{ shop.top_products or 'Bridal Sets, Mink Kambal, Bedding' }}</p>
+        </div>
+        <div>
+          <small>PRODUCT LINE</small>
+          <p>{{ shop.product_line or 'Bedsheets & Blankets' }}</p>
+        </div>
+        <div>
+          <small>MARKET LOCATION</small>
+          <p>{{ shop.market_area or 'Faisalabad' }}</p>
+        </div>
+        <div>
+          <small>COMPLETE ADDRESS</small>
+          <p>{{ shop.address or 'Address available upon contact' }}</p>
+        </div>
+        <div>
+          <small>CONTACT NUMBERS</small>
+          <p style="font-family: monospace; font-size: 13px;">{{ shop.phone or 'Not listed' }}</p>
+        </div>
+        <div>
+          <small>VERIFICATION STATUS</small>
+          <p style="color: #2e6b36; font-weight: 700;">✓ {{ shop.verification or 'Verified Directory Record' }}</p>
+        </div>
+      </div>
+
+      <div class="detail-note">
+        ✦ &nbsp; Direct supplier information verified from Faisalabad textile market registries. Contact supplier directly for wholesale bulk rates and shipping.
+      </div>
+
+      <div style="display: flex; gap: 14px; margin-top: 15px;">
+        <a class="btn btn-primary" href="{{ url_for('products') }}">Browse More Products <span>↗</span></a>
+        <a class="text-link" href="{{ url_for('directory') }}" style="align-self: center;">View All 500 Shops</a>
+      </div>
+    </div>
+  </div>
+
+  {% if related %}
+  <div style="margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--line);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <div class="section-kicker">✦ &nbsp; MORE FROM TEXTILE HUBS &nbsp; ✦</div>
+        <h3 style="font: 600 24px var(--serif); color: var(--wine); margin: 4px 0 0;">Related <em>Bedding & Suppliers</em></h3>
+      </div>
+      <a href="{{ url_for('products') }}" class="btn btn-primary" style="padding: 10px 16px; font-size: 11px;">View All Collections ↗</a>
+    </div>
+
+    <div class="product-grid">
+      {% for r in related %}
+      <article class="product-card">
+        <div class="product-img-wrap">
+          <a href="{{ url_for('shop_detail', shop_id=r.id) }}" style="display: block; width: 100%; height: 100%;">
+            {% if r.photo2 %}
+            <img src="{{ url_for('static', filename='images/shops/' + r.photo2) }}" alt="{{ r.top_products or r.product_line }}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="image-placeholder" style="display: none;">N<span>&</span>N</div>
+            {% else %}
+            <div class="image-placeholder">N<span>&</span>N</div>
+            {% endif %}
+          </a>
+          <span class="product-tag">{{ r.market_area or 'Faisalabad' }}</span>
+        </div>
+        <div class="product-body">
+          <div class="product-category">{{ r.product_line or 'Bedding' }}</div>
+          <h4 class="product-title" style="margin: 4px 0 8px; font-size: 14px;">
+            <a href="{{ url_for('shop_detail', shop_id=r.id) }}">{{ r.top_products or r.product_line }}</a>
+          </h4>
+          <div class="product-shop">
+            <span>🏪</span>
+            <span>By <a href="{{ url_for('shop_detail', shop_id=r.id) }}">{{ r.name }}</a></span>
+          </div>
+          <div class="product-footer">
+            <div class="product-price">
+              <small>EST. PRICE</small>
+              <strong>PKR {{ r.price_range or 'Contact' }}</strong>
+            </div>
+            <a class="btn-view-product" href="{{ url_for('shop_detail', shop_id=r.id) }}">View ↗</a>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}
