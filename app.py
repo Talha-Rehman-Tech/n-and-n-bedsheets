@@ -16,7 +16,8 @@ if os.environ.get('VERCEL'):
             pass
     DB_PATH=TMP_DB
 
-app=Flask(__name__, template_folder=os.path.join(BASE_DIR,'templates'), static_folder=os.path.join(BASE_DIR,'static'))
+STATIC_DIR=os.path.join(BASE_DIR,'public','static') if os.path.exists(os.path.join(BASE_DIR,'public','static')) else os.path.join(BASE_DIR,'static')
+app=Flask(__name__, template_folder=os.path.join(BASE_DIR,'templates'), static_folder=STATIC_DIR, static_url_path='/static')
 app.config['SECRET_KEY']=os.environ.get('NANDN_SECRET_KEY') or secrets.token_hex(32)
 def connect():
     db=sqlite3.connect(DB_PATH); db.row_factory=sqlite3.Row; db.execute('PRAGMA foreign_keys=ON'); return db
