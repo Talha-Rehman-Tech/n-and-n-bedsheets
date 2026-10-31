@@ -156,6 +156,8 @@ def verify_csrf():
     return False
 
 # --- WSGI MIDDLEWARE FOR ROBUST VERCEL ROUTING ---
+import urllib.parse
+
 class VercelMiddleware:
     def __init__(self, wsgi_app):
         self.wsgi_app = wsgi_app
@@ -171,34 +173,16 @@ class VercelMiddleware:
         if host:
             environ['HTTP_HOST'] = host
 
-        # 3. Detect real path forwarded from Vercel edge
-        candidates = [
-            environ.get('HTTP_X_VERCEL_FORWARDED_PATH'),
-            environ.get('HTTP_X_FORWARDED_URI'),
-            environ.get('HTTP_X_ORIGINAL_URI'),
-            environ.get('REQUEST_URI'),
-            environ.get('RAW_URI'),
-            environ.get('HTTP_X_MATCHED_PATH'),
-        ]
-        real_path = None
-        for c in candidates:
-            if c:
-                # Preserve query string if attached in edge header
-                if '?' in c:
-                    path_part, query_part = c.split('?', 1)
-                    if not environ.get('QUERY_STRING'):
-                        environ['QUERY_STRING'] = query_part
-                else:
-                    path_part = c
-
-                clean = path_part.strip()
-                if clean and not clean.startswith('/api/index') and clean != '/api':
-                    real_path = clean
-                    break
-
-        if real_path:
-            environ['PATH_INFO'] = real_path
+        # 3. Detect real path forwarded from Vercel rewrite via __path parameter
+        qs = environ.get('QUERY_STRING', '')
+        if '__path' in qs:
+            params = urllib.parse.parse_qs(qs, keep_blank_values=True)
+            if '__path' in params:
+                raw_path = params.pop('__path')[0].strip()
+                environ['PATH_INFO'] = ('/' + raw_path.lstrip('/')) if raw_path else '/'
+                environ['QUERY_STRING'] = urllib.parse.urlencode(params, doseq=True)
         else:
+            # Fallback path cleaner
             path_info = environ.get('PATH_INFO', '')
             if path_info.startswith('/api/index/'):
                 environ['PATH_INFO'] = path_info[len('/api/index'):]
@@ -208,6 +192,9 @@ class VercelMiddleware:
                 environ['PATH_INFO'] = path_info[len('/api'):]
             elif path_info == '/api':
                 environ['PATH_INFO'] = '/'
+
+        environ['SCRIPT_NAME'] = ''
+        return self.wsgi_app(environ, start_response)
 
         environ['SCRIPT_NAME'] = ''
         return self.wsgi_app(environ, start_response)
